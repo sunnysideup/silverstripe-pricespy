@@ -21,17 +21,13 @@ class PriceSpyDataProvider implements PriceSpyDataProviderInterface
         $assetUrl = Controller::join_links($baseURL, 'assets');
         $array = [];
         $array[] = [
-            'Product-name', //1
-            'Your-item-number', //2
-            'category', //3
-            'price-including-gst', //4
-            'Product-URL', //5
-            'manufacturer', //6
-            'manufacturer-SKU', //7
-            'EAN-13', //8
-            'shipping', //9
-            'image-URL', //10
-            'stock status', //11
+            'id', //1
+            'title', //2
+            'price', //3
+            'link', //4
+            'availability', //5
+            'condition', //6
+            'image_link', //6
         ];
         /** @todo rewrite to re-useable DB::Select() with prepared statements */
         $sql = '
@@ -49,8 +45,6 @@ class PriceSpyDataProvider implements PriceSpyDataProviderInterface
             INNER JOIN
                 "Product_Live" ON "SiteTree_Live"."ID" = "Product_Live"."ID"
             INNER JOIN
-                "Product_Live" ON "SiteTree_Live"."ID" = "Product_Live"."ID"
-            INNER JOIN
                 "Product_ProductGroups" ON "Product_Live"."ID" = "Product_ProductGroups"."ProductID"
             INNER JOIN
                 "ProductGroup_Live" ON "Product_ProductGroups"."ProductGroupID" = "ProductGroup_Live"."ID"
@@ -62,42 +56,37 @@ class PriceSpyDataProvider implements PriceSpyDataProviderInterface
                 "Product_Live"."AllowPurchase" = 1
             ORDER BY
                 "SiteTree_Live"."ID" DESC
+            LIMIT 10
                 ;
         ';
 
         $data = DB::query($sql);
 
-
         foreach ($data as $page) {
-            $productTitle = CsvFunctionality::removeBadCharacters($page['ProductTitle']);
             $internalItemID = CsvFunctionality::removeBadCharacters($page['InternalItemID']);
-            $category = CsvFunctionality::removeBadCharacters($page['ParentTitle']);
-            $shippingCost = 10;
-            $price = $page['Price'] + $shippingCost;
+            $productTitle = CsvFunctionality::removeBadCharacters($page['ProductTitle']);
+            $price = $page['Price'];
             $link = Controller::join_links($baseURL, CsvFunctionality::removeBadCharacters($page['InternalItemID'])) . '?utm_source=PriceSpy';
-            $brand = CsvFunctionality::removeBadCharacters($page['BrandTitle']);
-            $page['BrandTitle'] = 'TBC';
-            $page['SKU'] = 'TBC';
-            $page['EAN'] = 'TBC';
-            $shipping = $shippingCost;
+            $stock = 'in_stock';
+            $condition = 'new';
             $imageLink = Controller::join_links($assetUrl, ($page['FileFilename'] ?: $defaultImageLink));
-            $stock = 1;
+            // $shippingCost = 10;
+            // $category = CsvFunctionality::removeBadCharacters($page['ParentTitle']);
+            // $brand = 'NO BRAND';
+            // $sku = 'TBC';
+            // $ean = 'TBC';
+            // $shipping = $shippingCost;
 
             $array[] = [
-                $productTitle, //1. Product-name
-                $internalItemID, //2. Your-item-number
-                $category, //3. category
-                $price, //4. price-including-gst
-                $link, //5. Product-URL
-                $brand, //6. manufacturer
-                $page['SKU'], //7. manufacturer-SKU
-                $page['EAN'], //8 ean
-                $shipping, //9. shipping
-                $imageLink, //10. image-URL
-                $stock, //11. stock status
+                $internalItemID, //1. Your-item-number
+                $productTitle, //2. Product-name
+                $price, //3. price-including-gst
+                $link, //4. link
+                $stock, //5. stock status
+                $condition, //6. condition
+                $imageLink, //6. condition
             ];
         }
-
         return $array;
     }
 

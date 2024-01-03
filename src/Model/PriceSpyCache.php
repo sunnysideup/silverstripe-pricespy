@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\Pricespy\Model;
 
+use DOMDocument;
 use SilverStripe\Control\ContentNegotiator;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
@@ -21,7 +22,6 @@ use Sunnysideup\Pricespy\Providers\PriceSpyDataProvider;
  * @property string $Title
  * @property string $Link
  * @property int $ProductCount
- * @property bool $RunNow
  */
 class PriceSpyCache extends DataObject
 {
@@ -41,7 +41,6 @@ class PriceSpyCache extends DataObject
         'LinkAsCSV' => 'Varchar(255)',
         'LinkAsXML' => 'Varchar(255)',
         'ProductCount' => 'Int',
-        'RunNow' => 'Boolean',
     ];
 
     private static $default_sort = [
@@ -73,7 +72,7 @@ class PriceSpyCache extends DataObject
         }
 
         $obj = DataObject::get_one($className, ['ClassName' => $className]);
-        if (!$obj) {
+        if (!$obj || !$obj->exists()) {
             $obj = $className::create();
             $obj->write();
         }
@@ -135,20 +134,27 @@ class PriceSpyCache extends DataObject
         return $this->dataProviderAPI->getDataAsArray($where);
     }
 
-    public function WarmCache()
+    public function WarmCache(?string $returnAsExtension = '')
     {
         $data = $this->getDataAsArray();
         $this->Title = $this->Config()->singular_name . ' ran: ' . date('Y-m-d H:i');
         $this->ProductCount = count($data);
-        if($this->Config()->do_xml) {
-            $this->LinkAsXML = $this->getSpecificLink('xml');
-            $this->WarmCacheInner($data, 'getDataAsXMLInner', 'xml');
-        }
-        if($this->Config()->do_csv) {
-            $this->LinkAsCSV = $this->getSpecificLink('csv');
-            $this->WarmCacheInner($data, 'getDataAsCSVInner', 'csv');
+        foreach(['xml', 'csv'] as $extension) {
+            $test = 'do_' . $extension;
+            if($this->Config()->$test) {
+                $this->LinkAsCSV = $this->getSpecificLink($extension);
+                $this->saveToFile($data, 'getDataAs' . strtoupper($extension) . 'Inner', $extension);
+            } else {
+                file_put_contents($this->getFilePath($extension), strtoupper($extension) . ' Not enabled');
+            }
         }
         $this->write();
+        match ($returnAsExtension) {
+            'xml' => $output = file_get_contents($this->getFilePath('xml')),
+            'csv' => $output = file_get_contents($this->getFilePath('csv')),
+            default => $output = '',
+        };
+        return $output;
 
     }
 
@@ -156,7 +162,7 @@ class PriceSpyCache extends DataObject
     {
         return Controller::join_links(Director::absoluteBaseURL(), '/', $this->config()->file_name . '.' . $extension);
     }
-    protected function WarmCacheInner(array $data, string $method, string $extension)
+    protected function saveToFile(array $data, string $method, string $extension)
     {
         $path = $this->getFilePath($extension);
         if (file_exists($path)) {
@@ -179,7 +185,7 @@ class PriceSpyCache extends DataObject
     public function getDataAs(?string $extension = 'xml', ?bool $forceNew = false): string
     {
         if (false === $forceNew) {
-            $maxCacheAge = strtotime('Now') - ($this->Config()->max_age_in_minutes * 60);
+            $maxCacheAge = strtotime('NOW') - ($this->Config()->max_age_in_minutes * 60);
             if (strtotime((string) $this->LastEdited) > $maxCacheAge) {
                 $path = $this->getFilePath($extension);
                 if (file_exists($path)) {
@@ -191,8 +197,7 @@ class PriceSpyCache extends DataObject
             }
         }
 
-        $this->WarmCache();
-        return $this->getDataAs($extension, false);
+        return $this->WarmCache($extension);
     }
 
     public function getFileLastUpdated(string $extension = 'xml'): string
@@ -200,15 +205,6 @@ class PriceSpyCache extends DataObject
         return date('Y-m-d H:i', filemtime($this->getFilePath($extension)));
     }
 
-    protected function onAfterWrite()
-    {
-        parent::onAfterWrite();
-        if ($this->RunNow) {
-            $this->RunNow = false;
-            $this->write();
-            $this->WarmCache();
-        }
-    }
 
     protected function getFilePath(string $extension = 'xml'): string
     {
@@ -224,22 +220,62 @@ class PriceSpyCache extends DataObject
 
     protected function getDataAsXMLInner(array $data): string
     {
-        Config::modify()->set(ContentNegotiator::class, 'enabled', false);
-        $xml = new SimpleXMLElement('<root/>');
+
+
         $data = $this->convertToAssociativeArray($data);
-        array_walk_recursive($data, array($xml, 'addChild'));
-        return $xml->asXML();
+        Config::modify()->set(ContentNegotiator::class, 'enabled', false);
+
+        $xmlString =
+            '<?xml version="1.0" encoding="UTF-8"?>
+                <rss xmlns:pj="https://schema.prisjakt.nu/ns/1.0" xmlns:g="http://base.google.com/ns/1.0" version="3.0">
+                <channel>
+                    <title>Prisjakt Minimal Example Feed</title>
+                    <description>This is an example feed with the minimal values required</description>
+                    <link>https://schema.prisjakt.nu</link>
+                </channel>
+            </rss>
+            ';
+        $xml = simplexml_load_string($xmlString);
+
+        // Adding item under channel
+        $channel = $xml->channel;
+        foreach ($data as $entry) {
+            $item = $channel->addChild('item');
+            $this->addArrayToXml($entry, $item);
+        }
+        return $this->formatXml($xml->asXML());
     }
+
+    protected function addArrayToXml($item, SimpleXMLElement $xml)
+    {
+        foreach ($item as $key => $value) {
+            // Add child with namespace
+            if (is_array($value)) {
+                $subnode = $xml->addChild($key, null, 'http://base.google.com/ns/1.0');
+                $this->addArrayToXml($value, $subnode);
+            } else {
+                $xml->addChild($key, htmlspecialchars($value), 'http://base.google.com/ns/1.0');
+            }
+        }
+    }
+
     protected function convertToAssociativeArray(array $data): array
     {
         $headers = array_shift($data);
         $associativeArray = [];
-
         foreach ($data as $row) {
             $associativeArray[] = array_combine($headers, $row);
         }
-
         return $associativeArray;
     }
 
+    private function formatXml(string $xmlContent): string
+    {
+        $dom = new DOMDocument();
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom->loadXML($xmlContent);
+
+        return $dom->saveXML();
+    }
 }
