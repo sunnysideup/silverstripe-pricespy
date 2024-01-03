@@ -1,0 +1,33 @@
+{
+    "name": "sunnysideup/pricespy",
+    "description": "Sends product details to pricespy",
+    "type": "silverstripe-vendormodule",
+    "keywords": [
+        "silverstripe",
+        "CMS"
+    ],
+    "license": "BSD-3-Clause",
+    "require": {
+        "silverstripe/framework": "^5.0",
+        "silverstripe/admin": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sunnysideup\\Skeleton\\": "src/"
+        }
+    },
+    "extra": {
+        "expose": [
+            "client/dist"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Nicolaas Francken",
+            "email": "modules@sunnysideup.co.nz",
+            "role": "lead developer"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
