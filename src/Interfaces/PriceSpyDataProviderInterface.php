@@ -13,9 +13,5 @@ use Sunnysideup\Ecommerce\Pages\Product;
 
 interface PriceSpyDataProviderInterface
 {
-    //######################
-    //## Names Section
-    //######################
-
     public function getDataAsArray(?string $where = ''): array;
 }
