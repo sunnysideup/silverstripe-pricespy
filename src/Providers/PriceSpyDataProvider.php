@@ -101,28 +101,28 @@ class PriceSpyDataProvider implements PriceSpyDataProviderInterface
         return $array;
     }
 
-    // protected static function getBuyableTableNameName(?string $baseClass = Product::class): string
-    // {
-    //     $obj = Injector::inst()->get($baseClass);
-    //     $stage = self::getStage();
+    protected static function getBuyableTableNameName(?string $baseClass = Product::class): string
+    {
+        $obj = Injector::inst()->get($baseClass);
+        $stage = self::getStage();
 
-    //     return $obj->baseTable() . $stage;
-    // }
+        return $obj->baseTable() . $stage;
+    }
 
-    // /**
-    //  * Returns a versioned record stage table suffix (i.e "" or "_Live").
-    //  *
-    //  * @return string
-    //  */
-    // protected static function getStage(): string
-    // {
-    //     $stage = '';
+    /**
+     * Returns a versioned record stage table suffix (i.e "" or "_Live").
+     *
+     * @return string
+     */
+    protected static function getStage(): string
+    {
+        $stage = '';
 
-    //     if ('Live' === Versioned::get_stage()) {
-    //         $stage = '_Live';
-    //     }
+        if ('Live' === Versioned::get_stage()) {
+            $stage = '_Live';
+        }
 
-    //     return $stage;
-    // }
+        return $stage;
+    }
 
 }

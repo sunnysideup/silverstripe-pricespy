@@ -130,9 +130,9 @@ class PriceSpyCache extends DataObject
         return DBField::create_field(DBDatetime::class, $this->LastEdited)->ago();
     }
 
-    public function getDataAsArray(): array
+    public function getDataAsArray(?string $where = ''): array
     {
-        return $this->dataProviderAPI->getDataAsArray();
+        return $this->dataProviderAPI->getDataAsArray($where);
     }
 
     public function WarmCache()
