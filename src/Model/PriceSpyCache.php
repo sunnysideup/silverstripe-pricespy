@@ -6,12 +6,14 @@ use SilverStripe\Control\ContentNegotiator;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SimpleXMLElement;
 use Sunnysideup\Ecommerce\Api\Converters\CsvFunctionality;
+use Sunnysideup\Pricespy\Providers\PriceSpyDataProvider;
 
 /**
  * Class \Sunnysideup\Pricespy\Model\PriceSpyCache.
@@ -56,7 +58,7 @@ class PriceSpyCache extends DataObject
 
     private static $singular_name = 'Price Spy Cache';
 
-    private static $plural_name = 'Price Spy Cache';
+    private static $plural_name = 'Price Spy Caches';
 
     private static $summary_fields = [
         'Title' => 'Type',
@@ -103,7 +105,20 @@ class PriceSpyCache extends DataObject
 
                 ReadonlyField::create(
                     'LastEditedNice',
-                    'Cached file created ...',
+                    'Cached created',
+                ),
+
+                LiteralField::create(
+                    'CreateNewOne',
+                    '<p class="message warning">Create a new cache <a href="/createpricespyproducts">now</a>?</p>',
+                ),
+
+                LiteralField::create(
+                    'ReviewCurrentOne',
+                    '<p class="message good">Review current version as
+                        <a href="' . $this->LinkAsCSV . '">csv</a> or
+                        <a href="' . $this->LinkAsXML . '">xml</a>.
+                    </p>',
                 ),
             ]
         );
@@ -177,7 +192,7 @@ class PriceSpyCache extends DataObject
         }
 
         $this->WarmCache();
-        return $this->getDataAsCSV($extension);
+        return $this->getDataAs($extension, false);
     }
 
     public function getFileLastUpdated(string $extension = 'xml'): string
@@ -211,8 +226,20 @@ class PriceSpyCache extends DataObject
     {
         Config::modify()->set(ContentNegotiator::class, 'enabled', false);
         $xml = new SimpleXMLElement('<root/>');
-        array_walk_recursive($test_array, array($xml, 'addChild'));
+        $data = $this->convertToAssociativeArray($data);
+        array_walk_recursive($data, array($xml, 'addChild'));
         return $xml->asXML();
+    }
+    protected function convertToAssociativeArray(array $data): array
+    {
+        $headers = array_shift($data);
+        $associativeArray = [];
+
+        foreach ($data as $row) {
+            $associativeArray[] = array_combine($headers, $row);
+        }
+
+        return $associativeArray;
     }
 
 }
