@@ -1,0 +1,6 @@
+---
+Name: sunnysideup_pricespy_routes
+---
+SilverStripe\Control\Director:
+  rules:
+    createpricespyproducts: Sunnysideup\Pricespy\Control\PriceSpy

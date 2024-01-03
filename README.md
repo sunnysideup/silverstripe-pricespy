@@ -10,9 +10,9 @@
 
 ## Documentation
 
--   [Developer Docs](docs/en/INDEX.md)
--   [User Guide](docs/en/userguide.md)
--   [API Docs](http://docs.ssmods.com/sunnysideup/pricespy/classes.xhtml)
+- [Developer Docs](docs/en/INDEX.md)
+- [User Guide](docs/en/userguide.md)
+- [API Docs](http://docs.ssmods.com/sunnysideup/pricespy/classes.xhtml)
 
 ## Requirements
 
@@ -30,12 +30,12 @@ composer require sunnysideup/pricespy
 
 ### Configuration
 
-In the `_config` folder you will find the `skeleton.yml.example`
+In the `_config` folder you will find the `pricespy.yml.example`
 file that shows options for the configuration of this module.
 
 We recommend that you:
 
-1. copy these `skeleton.yml.example` files into your
+1. copy these `pricespy.yml.example` files into your
    `app/_config` folder (where available - otherwise search for `private static $` in the module to see what can be configured)
 2. remove the .example extension,
 3. delete the lines you do not care about, and
