@@ -54,9 +54,7 @@ class PriceSpyDataProvider implements PriceSpyDataProviderInterface
             WHERE
                 ' . $where . '
                 "Product_Live"."AllowPurchase" = 1
-            ORDER BY
-                "SiteTree_Live"."ID" DESC
-            LIMIT 10
+            ' . (Director::isDev() ? 'ORDER BY RAND() LIMIT 10' : 'ORDER BY "SiteTree_Live"."ID" DESC') . '
                 ;
         ';
 
