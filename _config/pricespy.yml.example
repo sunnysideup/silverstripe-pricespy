@@ -2,14 +2,14 @@
 Name: app_pricespy
 ---
 
-Sunnysideup\Pricespy\Control\PriceSpyCache:
+Sunnysideup\Pricespy\Control\PriceSpy:
   dependencies:
-    dataProviderAPI: App\Provider\MyPriceSpyDataProviderAPI
+    dataProviderAPI: '%$App\Provider\MyPriceSpyDataProviderAPI'
 
 
 # ============= OR ================
 
-Sunnysideup\Pricespy\Control\PriceSpyCache:
+Sunnysideup\Pricespy\Control\PriceSpy:
   dependencies:
     dataProviderAPI: '%$PriceSpyDataProviderAPI'
 SilverStripe\Core\Injector\Injector:
