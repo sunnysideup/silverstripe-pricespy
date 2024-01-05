@@ -25,7 +25,7 @@ class PriceSpy extends GoogleShoppingFeedController
 
     protected function getFileName(): string
     {
-        return 'products.xml';
+        return 'pricespyproducts.xml';
     }
 
 
