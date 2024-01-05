@@ -13,7 +13,6 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SimpleXMLElement;
-use Sunnysideup\Ecommerce\Api\Converters\CsvFunctionality;
 use Sunnysideup\Pricespy\Providers\PriceSpyDataProvider;
 
 /**
@@ -28,18 +27,16 @@ class PriceSpyCache extends DataObject
     /**
      * @var string
      */
-    private static $file_name = 'products';
+    private static $file_name = 'products.xml';
 
     private static $do_xml = true;
 
-    private static $do_csv = false;
 
     private static $table_name = 'PriceSpyCache';
 
     private static $db = [
         'Title' => 'Varchar(255)',
-        'LinkAsCSV' => 'Varchar(255)',
-        'LinkAsXML' => 'Varchar(255)',
+        'Link' => 'Varchar(255)',
         'ProductCount' => 'Int',
     ];
 
@@ -80,21 +77,6 @@ class PriceSpyCache extends DataObject
         return $obj;
     }
 
-    public function canEdit($member = null): bool
-    {
-        return false;
-    }
-
-    public function canDelete($member = null): bool
-    {
-        return parent::canDelete($member);
-    }
-
-    public function canCreate($member = null, $context = []): bool
-    {
-        return parent::canCreate($member, $context);
-    }
-
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -109,14 +91,13 @@ class PriceSpyCache extends DataObject
 
                 LiteralField::create(
                     'CreateNewOne',
-                    '<p class="message warning">Create a new cache <a href="/createpricespyproducts">now</a>?</p>',
+                    '<p class="message warning">Create a new cache by writing this one.</p>',
                 ),
 
                 LiteralField::create(
                     'ReviewCurrentOne',
                     '<p class="message good">Review current version as
-                        <a href="' . $this->LinkAsCSV . '">csv</a> or
-                        <a href="' . $this->LinkAsXML . '">xml</a>.
+                        <a href="' . $this->Link . '">xml file</a> or
                     </p>',
                 ),
             ]
@@ -124,6 +105,13 @@ class PriceSpyCache extends DataObject
 
         return $fields;
     }
+
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        $this->WarmCache();
+    }
+
     public function getLastEditedNice()
     {
         return DBField::create_field(DBDatetime::class, $this->LastEdited)->ago();
@@ -134,37 +122,28 @@ class PriceSpyCache extends DataObject
         return $this->dataProviderAPI->getDataAsArray($where);
     }
 
-    public function WarmCache(?string $returnAsExtension = '')
+    public function WarmCache()
     {
         $data = $this->getDataAsArray();
         $this->Title = $this->Config()->singular_name . ' ran: ' . date('Y-m-d H:i');
         $this->ProductCount = count($data);
-        foreach(['xml', 'csv'] as $extension) {
-            $test = 'do_' . $extension;
-            if($this->Config()->$test) {
-                $this->LinkAsCSV = $this->getSpecificLink($extension);
-                $this->saveToFile($data, 'getDataAs' . strtoupper($extension) . 'Inner', $extension);
-            } else {
-                file_put_contents($this->getFilePath($extension), strtoupper($extension) . ' Not enabled');
-            }
+        if($this->Config()->do_xml) {
+            $this->Link = $this->getSpecificLink();
+            $this->saveToFile($data, 'getDataAsXMLInner');
+        } else {
+            file_put_contents($this->getFilePath(), ' Not enabled');
         }
         $this->write();
-        match ($returnAsExtension) {
-            'xml' => $output = file_get_contents($this->getFilePath('xml')),
-            'csv' => $output = file_get_contents($this->getFilePath('csv')),
-            default => $output = '',
-        };
-        return $output;
-
+        return  file_get_contents($this->getFilePath()),
     }
 
-    protected function getSpecificLink(string $extension)
+    protected function getSpecificLink()
     {
-        return Controller::join_links(Director::absoluteBaseURL(), '/', $this->config()->file_name . '.' . $extension);
+        return Controller::join_links(Director::absoluteBaseURL(), '/', $this->config()->file_name);
     }
-    protected function saveToFile(array $data, string $method, string $extension)
+    protected function saveToFile(array $data, string $method)
     {
-        $path = $this->getFilePath($extension);
+        $path = $this->getFilePath();
         if (file_exists($path)) {
             try {
                 @unlink($path);
@@ -176,18 +155,18 @@ class PriceSpyCache extends DataObject
     }
 
     /**
-     * returns CSV. If the cache is expired, it redoes (warms) the cache.
+     * returns xml. If the cache is expired, it redoes (warms) the cache.
      * Otherwise straight from the cached file
      *
      * @param boolean|null $forceNew
      * @return string
      */
-    public function getDataAs(?string $extension = 'xml', ?bool $forceNew = false): string
+    public function getDataAs(?bool $forceNew = false): string
     {
         if (false === $forceNew) {
             $maxCacheAge = strtotime('NOW') - ($this->Config()->max_age_in_minutes * 60);
             if (strtotime((string) $this->LastEdited) > $maxCacheAge) {
-                $path = $this->getFilePath($extension);
+                $path = $this->getFilePath();
                 if (file_exists($path)) {
                     $timeChange = filemtime($path);
                     if ($timeChange > $maxCacheAge) {
@@ -197,26 +176,20 @@ class PriceSpyCache extends DataObject
             }
         }
 
-        return $this->WarmCache($extension);
+        return $this->WarmCache();
     }
 
-    public function getFileLastUpdated(string $extension = 'xml'): string
+    public function getFileLastUpdated(): string
     {
-        return date('Y-m-d H:i', filemtime($this->getFilePath($extension)));
+        return date('Y-m-d H:i', filemtime($this->getFilePath()));
     }
 
 
-    protected function getFilePath(string $extension = 'xml'): string
+    protected function getFilePath(): string
     {
-        return Controller::join_links(Director::baseFolder(), PUBLIC_DIR, $this->config()->file_name . '.' . $extension);
+        return Controller::join_links(Director::baseFolder(), PUBLIC_DIR, $this->config()->file_name);
     }
 
-    protected function getDataAsCSVInner(array $data): string
-    {
-        Config::modify()->set(ContentNegotiator::class, 'enabled', false);
-
-        return CsvFunctionality::convertToCSV($data);
-    }
 
     protected function getDataAsXMLInner(array $data): string
     {
