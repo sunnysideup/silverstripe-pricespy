@@ -11,34 +11,7 @@ use Sunnysideup\Ecommerce\Api\Converters\CsvFunctionality;
 use Sunnysideup\Ecommerce\Api\ProductCollection;
 use Sunnysideup\Ecommerce\Model\Config\EcommerceDBConfig;
 use Sunnysideup\Ecommerce\Pages\Product;
+use Sunnysideup\EcommerceGoogleShoppingFeed\Api\ProductCollectionForGoogleShoppingFeed;
 use Sunnysideup\Pricespy\Interfaces\PriceSpyDataProviderInterface;
 
-class PriceSpyDataProvider extends ProductCollection
-{
-    public function getArrayFull(?string $where = ''): array {}
-
-    protected static function getBuyableTableNameName(?string $baseClass = Product::class): string
-    {
-        $obj = Injector::inst()->get($baseClass);
-        $stage = self::getStage();
-
-        return $obj->baseTable() . $stage;
-    }
-
-    /**
-     * Returns a versioned record stage table suffix (i.e "" or "_Live").
-     *
-     * @return string
-     */
-    protected static function getStage(): string
-    {
-        $stage = '';
-
-        if ('Live' === Versioned::get_stage()) {
-            $stage = '_Live';
-        }
-
-        return $stage;
-    }
-
-}
+class PriceSpyDataProvider extends ProductCollectionForGoogleShoppingFeed {}
