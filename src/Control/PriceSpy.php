@@ -28,5 +28,14 @@ class PriceSpy extends GoogleShoppingFeedController
         return 'pricespyproducts.xml';
     }
 
+    protected function getTitle(): string
+    {
+        return 'Pricespy Feed';
+    }
+
+    protected function getSchema(): string
+    {
+        return '<rss xmlns:pj="https://schema.prisjakt.nu/ns/1.0" xmlns:g="http://base.google.com/ns/1.0" version="3.0">';
+    }
 
 }
