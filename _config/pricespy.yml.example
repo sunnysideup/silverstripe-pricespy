@@ -5,13 +5,9 @@ Name: app_pricespy
 Sunnysideup\Pricespy\Control\PriceSpy:
   dependencies:
     dataProviderAPI: '%$App\Provider\MyPriceSpyDataProviderAPI'
-
-
-# ============= OR ================
-
-Sunnysideup\Pricespy\Control\PriceSpy:
-  dependencies:
+    # ============= OR ================
     dataProviderAPI: '%$PriceSpyDataProviderAPI'
+
 SilverStripe\Core\Injector\Injector:
   PriceSpyDataProviderAPI:
     class: App\Provider\MyPriceSpyDataProviderAPI
