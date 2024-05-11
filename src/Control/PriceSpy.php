@@ -30,7 +30,7 @@ class PriceSpy extends GoogleShoppingFeedController
 
     protected function getTitle(): string
     {
-        return 'Pricespy Feed ('.count($this->getRawDataForGoogleShoppingFeed()).')';
+        return 'PriceSpy Feed  ('.$this->getProductCount().')';
     }
 
     protected function getSchema(): string
