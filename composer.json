@@ -1,32 +1,37 @@
 {
-  "name": "sunnysideup/pricespy",
-  "description": "Sends product details to pricespy",
-  "type": "silverstripe-vendormodule",
-  "keywords": [
-    "silverstripe",
-    "CMS"
-  ],
-  "license": "BSD-3-Clause",
-  "require": {
-    "sunnysideup/ecommerce-google-shopping-feed": "5.x-dev"
-  },
-  "autoload": {
-    "psr-4": {
-      "Sunnysideup\\Pricespy\\": "src/"
+    "name": "sunnysideup/pricespy",
+    "description": "Sends product details to pricespy",
+    "type": "silverstripe-vendormodule",
+    "keywords": [
+        "silverstripe",
+        "CMS"
+    ],
+    "license": "BSD-3-Clause",
+    "require": [],
+    "autoload": {
+        "psr-4": {
+            "Sunnysideup\\Pricespy\\": "src/"
+        }
+    },
+    "extra": {
+        "expose": [
+            "client/dist"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Nicolaas Francken",
+            "email": "modules@sunnysideup.co.nz",
+            "role": "lead developer"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "yet-to-update": {
+        "sunnysideup/ecommerce-google-shopping-feed": {
+            "section": "require",
+            "current": "^5.0-dev",
+            "reason": "no-compatible-stable-release"
+        }
     }
-  },
-  "extra": {
-    "expose": [
-      "client/dist"
-    ]
-  },
-  "authors": [
-    {
-      "name": "Nicolaas Francken",
-      "email": "modules@sunnysideup.co.nz",
-      "role": "lead developer"
-    }
-  ],
-  "minimum-stability": "dev",
-  "prefer-stable": true
 }
