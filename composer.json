@@ -7,7 +7,9 @@
         "CMS"
     ],
     "license": "BSD-3-Clause",
-    "require": [],
+    "require": {
+        "sunnysideup/ecommerce-google-shopping-feed": "dev-main"
+    },
     "autoload": {
         "psr-4": {
             "Sunnysideup\\Pricespy\\": "src/"
@@ -26,12 +28,5 @@
         }
     ],
     "minimum-stability": "dev",
-    "prefer-stable": true,
-    "yet-to-update": {
-        "sunnysideup/ecommerce-google-shopping-feed": {
-            "section": "require",
-            "current": "^5.0-dev",
-            "reason": "no-compatible-stable-release"
-        }
-    }
+    "prefer-stable": true
 }
